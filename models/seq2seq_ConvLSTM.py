@@ -3,7 +3,6 @@ import torch.nn as nn
 
 from models.ConvLSTMCell import ConvLSTMCell
 
-
 class EncoderDecoderConvLSTM(nn.Module):
     def __init__(self, nf, in_chan):
         super(EncoderDecoderConvLSTM, self).__init__()

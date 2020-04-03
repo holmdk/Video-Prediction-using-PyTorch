@@ -39,7 +39,6 @@ class MovingMNISTLightning(pl.LightningModule):
 
         # default config
         self.path = os.getcwd() + '/data'
-        self.normalize = False
         self.model = model
 
         # logging config
