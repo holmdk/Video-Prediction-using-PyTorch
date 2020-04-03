@@ -4,6 +4,7 @@ import os, glob
 from tensorboard import program
 
 import time
+program.logger.setLevel('INFO')
 
 def run_tensorboard(new_run):
 
