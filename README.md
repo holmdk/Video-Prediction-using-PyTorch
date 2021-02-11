@@ -32,6 +32,17 @@ python main.py
 4. Navigate to http://localhost:6006/ for visualizing results
 
 
+## Results
+After some iterations, we notice that our model is actually generating images of all zero's! This is a common issue people using ConvLSTM reports, however, do not be discouraged! Simply keep training the model, and you should start to see actual and plausible future predictions.
+
+### Initial results (500 steps)
+![Initial](/images/epoch0_500steps.png)
+
+
+### After half an epoch (2500 steps)
+Now, we are actually starting to see actual predictions, however blurry they might be.
+![halfepoch](/images/epoch0_2500steps.png)
+
 ## Todo:
 - [ ] Add video of predictions by model
 - [ ] Implement other video prediction methods
