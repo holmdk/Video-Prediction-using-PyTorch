@@ -32,3 +32,9 @@ python main.py
 4. Navigate to http://localhost:6006/ for visualizing results
 
 
+## Todo:
+- [ ] Add video of predictions by model
+- [ ] Implement other video prediction methods
+  - [ ] SVG
+  - [ ] E3D
+
