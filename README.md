@@ -1,6 +1,9 @@
 # Video-Prediction-using-PyTorch
-Repository for frame prediction on the MovingMNIST dataset using seq2seq ConvLSTM following this guide https://holmdk.github.io/2020/04/02/video_prediction.html.
-
+![Alt Text](/images/mnist_gif.gif)
+Repository for frame prediction on the MovingMNIST dataset using seq2seq ConvLSTM following either of these guides:  
+  
+[TDS](https://towardsdatascience.com/video-prediction-using-convlstm-with-pytorch-lightning-27b195fd21a2)  
+[Github pages](https://holmdk.github.io/2020/04/02/video_prediction.html)
 
 ## Libraries
 Make sure you have the following libraries installed!
@@ -47,7 +50,9 @@ Now, we are actually starting to see actual predictions, however blurry they mig
 
 ## Todo:
 - [ ] Add video of predictions by model
-- [ ] Implement other video prediction methods
+- [ ] Implement other video prediction methods (feel free to contribute!)
   - [ ] SVG
+  - [ ] PredRNN+
   - [ ] E3D
+  - [ ] MIM
 
