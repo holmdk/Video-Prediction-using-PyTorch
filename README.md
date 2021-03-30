@@ -48,6 +48,10 @@ After some iterations, we notice that our model is actually generating images of
 Now, we are actually starting to see actual predictions, however blurry they might be.
 ![halfepoch](/images/epoch0_2500steps.png)
 
+
+## Acknowledgements
+Thanks to https://github.com/jhhuang96/ConvLSTM-PyTorch whose repo provided a large portion of the required code for the ConvLSTM and ConvGRU implementations.
+
 ## Todo:
 - [ ] Add video of predictions by model
 - [ ] Implement other video prediction methods (feel free to contribute!)

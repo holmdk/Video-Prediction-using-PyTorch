@@ -1,21 +1,21 @@
 # import libraries
+import argparse
 import os
+
 import matplotlib.pyplot as plt
+import pytorch_lightning as pl
 import torch
 import torchvision
-from torch.nn import functional as F
-from torch.utils.data import DataLoader
-import pytorch_lightning as pl
 from pytorch_lightning import Trainer
-from multiprocessing import Process
+from torch.utils.data import DataLoader
 
-from utils.start_tensorboard import run_tensorboard
-from models.seq2seq_ConvLSTM import EncoderDecoderConvLSTM
 from data.MovingMNIST import MovingMNIST
-
-import argparse
+# from utils.start_tensorboard import run_tensorboard
+# from models.Legacy.seq2seq_ConvLSTM import EncoderDecoderConvLSTM
 
 parser = argparse.ArgumentParser()
+parser.add_argument('--model', type=str, default='ConvLSTM',
+                    help='Deep learning model to use. Can be either "ConvLSTM" or "ConvGRU"')
 parser.add_argument('--lr', default=1e-4, type=float, help='learning rate')
 parser.add_argument('--beta_1', type=float, default=0.9, help='decay rate 1')
 parser.add_argument('--beta_2', type=float, default=0.98, help='decay rate 2')
@@ -23,10 +23,11 @@ parser.add_argument('--batch_size', default=12, type=int, help='batch size')
 parser.add_argument('--epochs', type=int, default=300, help='number of epochs to train for')
 parser.add_argument('--use_amp', default=False, type=bool, help='mixed-precision training')
 parser.add_argument('--n_gpus', type=int, default=1, help='number of GPUs')
+parser.add_argument('--distributed_backend', type=str, default='dp',
+                    help='Which distributed data loading backend to use. Can be either "dp" or "ddp"')
 parser.add_argument('--n_hidden_dim', type=int, default=64, help='number of hidden dim for ConvLSTM layers')
 
 opt = parser.parse_args()
-
 
 ##########################
 ######### MODEL ##########
@@ -39,6 +40,7 @@ class MovingMNISTLightning(pl.LightningModule):
 
         # default config
         self.path = os.getcwd() + '/data'
+
         self.model = model
 
         # logging config
@@ -106,20 +108,17 @@ class MovingMNISTLightning(pl.LightningModule):
 
         return {'loss': loss, 'log': tensorboard_logs}
 
-
     def test_step(self, batch, batch_idx):
         # OPTIONAL
         x, y = batch
         y_hat = self.forward(x)
         return {'test_loss': self.criterion(y_hat, y)}
 
-
     def test_end(self, outputs):
         # OPTIONAL
         avg_loss = torch.stack([x['test_loss'] for x in outputs]).mean()
         tensorboard_logs = {'test_loss': avg_loss}
         return {'avg_test_loss': avg_loss, 'log': tensorboard_logs}
-
 
     def configure_optimizers(self):
         return torch.optim.Adam(self.parameters(), lr=opt.lr, betas=(opt.beta_1, opt.beta_2))
@@ -159,15 +158,36 @@ class MovingMNISTLightning(pl.LightningModule):
         return test_loader
 
 
-
 def run_trainer():
-    conv_lstm_model = EncoderDecoderConvLSTM(nf=opt.n_hidden_dim, in_chan=1)
+    if opt.model == 'ConvLSTM':
+        from models.ConvRNNAutoencoder import Autoencoder, Encoder, Decoder
+        from models.ConvLSTM.hyperparameter_config import convlstm_encoder_params, convlstm_decoder_params
+        encoder = Encoder(convlstm_encoder_params[0],
+                          convlstm_encoder_params[1]).cuda()
+        decoder = Decoder(convlstm_decoder_params[0],
+                          convlstm_decoder_params[1]).cuda()
 
-    model = MovingMNISTLightning(model=conv_lstm_model)
+        autoencoder = Autoencoder(encoder, decoder)
+
+    elif opt.model == 'ConvGRU':
+        from models.ConvRNNAutoencoder import Autoencoder, Encoder, Decoder
+        from models.ConvGRU.hyperparameter_config import convgru_encoder_params, convgru_decoder_params
+        encoder = Encoder(convgru_encoder_params[0],
+                          convgru_encoder_params[1]).cuda()
+        decoder = Decoder(convgru_decoder_params[0],
+                          convgru_decoder_params[1]).cuda()
+
+        autoencoder = Autoencoder(encoder, decoder)
+    else:
+        raise NotImplementedError('Model {} is not implemented, please select ConvLSTM or ConvGRU'.format(opt.model))
+
+    # conv_lstm_model = EncoderDecoderConvLSTM(nf=opt.n_hidden_dim, in_chan=1)
+
+    model = MovingMNISTLightning(model=autoencoder)
 
     trainer = Trainer(max_epochs=opt.epochs,
                       gpus=opt.n_gpus,
-                      distributed_backend='dp',
+                      distributed_backend=opt.distributed_backend,
                       early_stop_callback=False,
                       use_amp=opt.use_amp
                       )
@@ -176,12 +196,10 @@ def run_trainer():
 
 
 if __name__ == '__main__':
-    p1 = Process(target=run_trainer)                    # start trainer
-    p1.start()
-    p2 = Process(target=run_tensorboard(new_run=True))  # start tensorboard
-    p2.start()
-    p1.join()
-    p2.join()
-
-
-
+    run_trainer()
+    # p1 = Process(target=run_trainer)                    # start trainer
+    # p1.start()
+    # p2 = Process(target=run_tensorboard(new_run=True))  # start tensorboard
+    # p2.start()
+    # p1.join()
+    # p2.join()
